@@ -1,21 +1,14 @@
 package session
 
-// Driver interface usada para todas as implementações
+// IDriver interface usada para todas as implementações
 // de drivers feita
-type Driver interface {
-	start()
+type IDriver interface {
+	start(sessionID string)
 	destroy()
 	add(key interface{}, value interface{})
-	all()
-	get(key interface{})
-}
-
-// Manager um struct que representa o gerenciamento de sessão
-// dentro dos drivers
-type ResourceManager struct {
-	settings DriverMapSetting
-	sessionID string
-	keys ManagerKeys
+	all() []ManagerKeys
+	get(key interface{}) ManagerKeys
+	id() string
 }
 
 // DriverMapSetting tipo responsável por receber configurações
@@ -29,20 +22,23 @@ type ResourceManager struct {
 //
 type DriverMapSetting map[string]interface{}
 
-type ManagerKeys map[interface{}]interface{}
+// ManagerKeys representa um tipo para chaves dentro da sessao
+type ManagerKeys struct {
+	Key   interface{}
+	Value interface{}
+}
 
 // NewDriver factory responsável por fornecer a instancia de driver desejada
-func NewDriver(driver string, settings DriverMapSetting) *ResourceManager {
+func NewDriver(driver string, settings DriverMapSetting) IDriver {
 
 	switch driver {
-	//case "filesystem":
-	//	return NewFileSystem(settings)
+	case "filesystem":
+		new := newFilesystem(settings)
+		return new
 	case "memory":
 		new := newMemory(settings)
-		return &new
+		return new
+	default:
+		panic("driver not found")
 	}
-
-	panic("driver not found")
-
-	return nil
 }

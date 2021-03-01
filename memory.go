@@ -1,34 +1,51 @@
 package session
 
-// Memory é um driver para controle de sessão
-// Através da memória
+// MemoryManager é um struct que representa gerenciamento por
+// memoria
+type MemoryManager struct {
+	settings  DriverMapSetting
+	sessionID string
+	Keys      []ManagerKeys
+}
 
-var memory ResourceManager
-
-func newMemory(settings DriverMapSetting) ResourceManager {
-	memory = ResourceManager{
+func newMemory(settings DriverMapSetting) *MemoryManager {
+	memory := MemoryManager{
 		settings: settings,
 	}
-	return memory
+	return &memory
 }
 
-func(f* ResourceManager) start() {
-	// ..
+func (r *MemoryManager) start(sessionID string) {
+	r.sessionID = sessionID
 }
 
-func(f* ResourceManager) destroy() {
-	f.keys = make(ManagerKeys)
-	f.sessionID = ""
+func (r *MemoryManager) destroy() {
+	r.Keys = make([]ManagerKeys, 0)
+	r.sessionID = ""
 }
 
-func(f* ResourceManager) add(key interface{}, value interface{}) {
-	f.keys[key] = value
+func (r *MemoryManager) add(key interface{}, value interface{}) {
+	r.Keys = append(r.Keys, ManagerKeys{
+		Key:   key,
+		Value: value,
+	})
 }
 
-func(f* ResourceManager) all() {
-	// ..
+func (r *MemoryManager) all() []ManagerKeys {
+	return r.Keys
 }
 
-func(f* ResourceManager) get(key interface{}) interface{} {
-	return f.keys[key]
+func (r *MemoryManager) get(key interface{}) ManagerKeys {
+
+	for k, v := range r.Keys {
+		if k == key {
+			return v
+		}
+	}
+
+	return ManagerKeys{}
+}
+
+func (r *MemoryManager) id() string {
+	return r.sessionID
 }

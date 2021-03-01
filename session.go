@@ -9,61 +9,67 @@ import (
 	"time"
 )
 
-var currentDriver *ResourceManager
+var currentDriver IDriver
 var lock sync.Mutex
 var writer http.ResponseWriter
 var sessionName string = "applicationGoSession"
 
-func NewSession(driver string, settings DriverMapSetting) *ResourceManager {
-
+// NewSession cria uma nova instancia para sessao de seguintes tipos:
+// memory, filesystem
+func NewSession(driver string, settings DriverMapSetting) {
 	currentDriver = NewDriver(driver, settings)
-	return currentDriver
 }
 
+// SetNameSession defini um nome para sessao atual
 func SetNameSession(name string) {
 	sessionName = name
 }
 
+// Start inicia sessao
 func Start() {
 	lock.Lock()
 
-	currentDriver.keys = make(ManagerKeys)
+	sessID := ID()
 
-	if Id() == "" {
-		currentDriver.sessionID = createSessionID()
+	if sessID == "" {
+		sessID = createSessionID()
 	}
 
-	currentDriver.start()
+	currentDriver.start(sessID)
 
 	lock.Unlock()
 }
 
+// Destroy destroi a sessao atual
 func Destroy() {
 	lock.Lock()
 	currentDriver.destroy()
 	lock.Unlock()
 }
 
-func Id() string {
-	return currentDriver.sessionID
+// ID recupera id da sessao
+func ID() string {
+	return currentDriver.id()
 }
 
+// Push adiciona um item na chave expecificada
 func Push(key interface{}, value interface{}) {
 	lock.Lock()
 	currentDriver.add(key, value)
 	lock.Unlock()
 }
 
-func All() {
-	lock.Lock()
-	currentDriver.all()
-	lock.Unlock()
+// All recupera todos os itens guardados na sessao
+func All() []ManagerKeys {
+	return currentDriver.all()
 }
 
-func Get(key interface{}) interface{} {
+// Get recupera um item expecífico da sessao
+func Get(key interface{}) ManagerKeys {
 	return currentDriver.get(key)
 }
 
+// Delete um item da sessao
 func Delete(key interface{}) {
 	lock.Lock()
 	currentDriver.destroy()
@@ -101,6 +107,6 @@ func createSessionID() string {
 func SetWriter(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:  sessionName,
-		Value: Id(),
+		Value: ID(),
 	})
 }
